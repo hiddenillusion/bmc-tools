@@ -18,6 +18,7 @@ class BMCContainer():
 		self.btype = None
 		self.cnt = count
 		self.fname = None
+		self.fpath = None
 		self.oldsave = old
 		self.pal = False
 		self.verb = verbose
@@ -29,16 +30,17 @@ class BMCContainer():
 		if not verbose or self.verb:
 			stream.write("%s %s%s" % (self.LOG_TYPES[ltype], lmsg, os.linesep))
 		return True
-	def b_import(self, fname):
+	def b_import(self, fpath):
 		if len(self.bdat) > 0:
 			self.b_log(sys.stderr, False, 3, "Data is already waiting to be processed; aborting.")
 			return False
-		with open(fname, "rb") as f:
+		with open(fpath, "rb") as f:
 			self.bdat = f.read()
 		if len(self.bdat) == 0:
 			self.b_log(sys.stderr, False, 3, "Unable to retrieve file contents; aborting.")
 			return False
-		self.fname = fname
+		self.fpath = fpath
+		self.fname = os.path.basename(self.fpath)
 		self.btype = self.BMC_CONTAINER
 		if self.bdat[:len(self.BIN_FILE_HEADER)] == self.BIN_FILE_HEADER:
 			self.b_log(sys.stdout, True, 2, "Subsequent header version: %d." % (unpack("<L", self.bdat[len(self.BIN_FILE_HEADER):len(self.BIN_FILE_HEADER)+4])[0]))
@@ -178,6 +180,6 @@ if __name__ == "__main__":
 	for src in src_files:
 		if bmcc.b_import(src):
 			bmcc.b_process()
-			bmcc.b_export(args.dest)
+			bmcc.b_export(os.path.abspath(args.dest))
 			bmcc.b_flush()
 	del bmcc
